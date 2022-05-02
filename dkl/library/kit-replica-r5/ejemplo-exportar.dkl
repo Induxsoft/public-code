@@ -1,0 +1,43 @@
+#include "dkli.dkh"
+
+#!
+
+program "ejemplo-exportar ftt"
+{
+    #include "functions.dkh"
+    #include "dbr.dkh"
+    #include "serialize.dkh"
+    #include "dbr.ftt.dkl"
+    #include "ftt.r5.cmd.dkl"
+
+    if not(field.exist(cmd_args,"outfile") || field.exist(cmd_args,"outpath"))
+    {
+        do print("Parámetros insuficientes")
+        return
+    }
+
+    new config_export
+    {
+        member @"entidad"
+        {
+            // Configure aquí la exportación de entidades como se indica en:
+            // https://github.com/Induxsoft/proprietary-standards/blob/main/FTT-JSON/dkl/config-export.md
+            
+        }
+    }
+
+    ref db=dbr.open(field.str(cmd_args,"dbqn"))
+
+    ref data=dbr.ftt.export(db,config_export)
+
+    if not(field.exist(cmd_args,"outfile"))
+    {
+        cmd_args<"outfile">: path.concat(field.str(cmd_args,"outpath"),field.str(data,"uuid")+"."+field.dstr(cmd_args,"ext","fttjson"))
+    }
+
+    do dir.ensure(dir.name(field.str(cmd_args,"outfile")))
+
+    do file.wtext(field.str(cmd_args,"outfile"),to.json(data))
+
+    do print ("Archivo generado: "+field.str(cmd_args,"outfile"))
+}

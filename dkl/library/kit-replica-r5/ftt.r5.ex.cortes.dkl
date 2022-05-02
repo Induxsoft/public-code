@@ -1,0 +1,49 @@
+#include "dkli.dkh"
+
+#!
+
+    program "ejemplo-exportar ftt"
+    {
+    #include "functions.dkh"
+    #include "dbr.dkh"
+    #include "serialize.dkh"
+    #include "dbr.ftt.dkl"
+    #include "ftt.r5.cmd.dkl"
+
+        if not(field.exist(cmd_args,"outfile") || field.exist(cmd_args,"outpath"))
+        {
+            do print("Parámetros insuficientes")
+            return
+        }
+
+          new config_export 
+        {
+       
+            
+                 member @"corte"
+                {
+                @"source":"select DATE_FORMAT(co.Sys_TimeStamp,'%Y-%m-%d %H:%i') as Sys_TimeStamp,co.sys_guid,co.cerrado,DATE_FORMAT(co.FApertura,'%Y-%m-%d %H:%i') as FApertura,DATE_FORMAT(co.FCierre,'%Y-%m-%d %H:%i') as FCierre,DATE_FORMAT(co.HAPertura,'%Y-%m-%d %H:%i') as HAPertura,DATE_FORMAT(co.HCierre,'%Y-%m-%d %H:%i') as HCierre,co.icaja,co.icajero from corte co where not ifnull(co.sys_exported,0) or co.sys_dtexported<co.sys_timestamp order by co.sys_pk limit 50;"                  // Consula SQL de datos REQUERIDO
+                
+                //@"on_begin":"update, insert o delete"   // Consulta SQL que se ejecutará por cada fila de 'source' antes de generar el JSON (OPCIONAL)
+                 @"parameters_prefix":""                 // Prefijo usado para nombrar como parámetros los campos de 'source' en las subconsultas (OPCIONAL)
+                 @"on_complete":"update corte set sys_dtexported=now(), sys_exported=1 where sys_guid=@sys_guid;"// Consulta SQL que se ejecutará por cada fila de 'source' (OPCIONAL) después de generar el JSON
+
+                } //corte   
+           
+        } //configexport
+
+             ref db=dbr.open(field.str(cmd_args,"dbqn"))
+
+            ref data=dbr.ftt.export(db,config_export)
+
+             if not(field.exist(cmd_args,"outfile"))
+               {
+                cmd_args<"outfile">: path.concat(field.str(cmd_args,"outpath"),field.str(data,"uuid")+"."+field.dstr(cmd_args,"ext","fttjson"))
+               }
+
+        do dir.ensure(dir.name(field.str(cmd_args,"outfile")))
+
+        do file.wtext(field.str(cmd_args,"outfile"),to.json(data))
+
+        do print ("Archivo generado: "+field.str(cmd_args,"outfile"))
+    }

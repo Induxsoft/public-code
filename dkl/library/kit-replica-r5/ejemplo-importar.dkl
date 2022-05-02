@@ -1,0 +1,29 @@
+#include "dkli.dkh"
+
+#!
+
+program "ejemplo-importar ftt"
+{
+    #include "functions.dkh"
+    #include "dbr.dkh"
+    #include "serialize.dkh"
+    #include "dbr.ftt.dkl"
+    #include "ftt.r5.cmd.dkl"
+
+    new config_import
+    {
+        member @"entidad"
+        {
+            // Configure aquí la importación de entidades como se indica en:
+            // https://github.com/Induxsoft/proprietary-standards/blob/main/FTT-JSON/dkl/config-import.md
+        }
+    }
+
+    ref db=dbr.open(field.str(cmd_args,"dbqn"))
+
+    ref data=from.json(file.rtext(field.str(cmd_args,"srcfile")))
+
+    do dbr.ftt.import(db,data, config_import)
+
+    do print ("Proceso completado!")
+}
