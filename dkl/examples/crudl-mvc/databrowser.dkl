@@ -1,0 +1,10 @@
+﻿#include "dkli.dkh"
+
+#!
+module "crud-view-databrowser"
+{
+    viewDataBrowser::&entitiesTable,selectedKey
+    {
+        //Produce la salida (vista) al estilo DataBrowser
+    }
+}

@@ -1,0 +1,46 @@
+﻿#include "dkli.dkh"
+
+#!
+module "crud-model"
+{
+    // Crea una estructura que representa a la entidad de datos
+    // y asigna valores iniciales según corresponda
+    create:: &requestData
+    {
+        new e { }
+
+        return e
+    }
+
+    // Obtiene una estructura desde la base de datos 
+    // o el almacenamiento persistente usado
+    read:: &requestData
+    {
+        ref e=dbr.rec(db,"select...", requestData)
+
+        return e
+    }
+
+    // Actualiza o inserta una entidad en la base de datos
+    update:: &requestData
+    {
+        ref entity=record.copy(requestData,"campo1, campo2, ...")
+
+        return dbr.save(db,"tabla", entity)
+    }
+
+    // Elimina una entidad de la base de datos
+    delete:: &requestData
+    {
+        do dbr.delete(db,"tabla", "sys_pk=@sys_pk", requestData)
+    }
+
+    //Devuelve una colección de entidades según los parámetros de consulta
+    list:: &requestData
+    {
+        ref t=dbr.table(db,"select...", requestData)
+
+        return t
+    }
+
+}

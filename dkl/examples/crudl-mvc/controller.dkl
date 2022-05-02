@@ -1,0 +1,44 @@
+﻿#include "dkli.dkh"
+
+#!
+module "crud-controller"
+{
+    #!
+    controller:: action, &requestData
+    {
+        switch(action)
+        {
+            case "create"
+            {
+                do viewDataForm(create(requestData))
+            }
+            case "read"
+            {
+                do viewDataForm(read(requestData))
+            }
+            case "update"
+            {
+                key=update(requestData)
+                
+                do viewDataBrowser(list(requestData),key)
+
+                exception
+                {
+                    requestData<"error_message">:last_error()
+                    // Transformar el array de estructuras en una tabla en el caso de miembros de detalle
+                    //requestData<"detalle*">:list.totable(field.obj(requestData,"detalle"))
+                    do viewDataForm(requestData)
+                }
+            }
+            case "delete"
+            {
+                do deleteCompra(requestData)
+                do viewDataBrowser(list(requestData),0)
+            }
+            case "list"
+            {
+                do viewDataBrowser(list(requestData),0)
+            }
+        }
+    }
+}

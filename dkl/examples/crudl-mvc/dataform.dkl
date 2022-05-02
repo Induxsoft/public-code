@@ -1,0 +1,10 @@
+﻿#include "dkli.dkh"
+
+#!
+module "crud-view-dataform"
+{
+    viewDataForm::&entity
+    {
+        //Produce la salida (vista) al estilo DataForm
+    }
+}
