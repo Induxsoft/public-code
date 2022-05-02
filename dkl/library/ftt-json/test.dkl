@@ -1,0 +1,74 @@
+#include "dkli.dkh"    
+#!
+program "fttjson.test"
+{
+    #include "functions.dkh"
+    #include "serialize.dkh"
+    #include "dbr.dkh"
+    #include "dbr.ftt.dkl"
+
+    
+
+    new config
+    {
+        member @"ventas"
+        {
+            @"source":"select * from venta where sys_dtexported<sys_timestamp or isnull(sys_dtexported) order by sys_pk limit 5;"
+            @"on_begin":""
+            @"parameters_prefix":""
+            //@"on_complete":"update venta sys_dtexported=now() where sys_guid=@sys_guid;"
+
+            member @"childs"
+            {
+                member "dventas"
+                {
+                    @"source":"select * from dventa where FK_Venta_Detalle=@sys_pk order by sys_pk;"
+                }
+            }
+        }
+    }
+
+    
+    new config_import
+    {
+        member @"ventas"
+        {
+            @"case_insensitive":@true
+            @"target":"venta"
+            @"identity":"sys_guid=@sys_guid;"
+            //@"on_insert":"update..."
+            //@"on_update":"update ..."
+            @"before":""
+            @"after":""
+
+            member @"queryfields"
+            {
+                @"icliente":"select sys_pk+5000 from cliente where sys_pk=@icliente;"
+                @"sys_timestamp":"select DATE_FORMAT(STR_TO_DATE(@sys_timestamp,'%Y-%m-%dT%TZ'),'%Y-%m-%dT%T');"
+                @"sys_dtcreated":"select DATE_FORMAT(STR_TO_DATE(@sys_dtcreated,'%Y-%m-%dT%TZ'),'%Y-%m-%dT%T');"
+            }
+
+            @"exclude":"sys_pk, sys_recver, saldo, sys_dtexported,fecha,fembarque,fentrega,fliquidacion"
+            @"insert":"*"
+            @"update":"*"
+
+            member @"childs"
+            {
+                member @"dventas"
+                {
+                    @"exclude":"sys_pk, sys_recver, saldo, Sys_DTExported"
+                    @"target":"dventa"
+                    @"identity":"sys_guid=@sys_guid;"
+                }
+            }
+        }
+    }
+
+    ref db=dbr.open("maxi2021@test1")
+
+    json=to.json(dbr.ftt.export(db,config))
+    
+    do dbr.ftt.import(db,from.json(json),config_import)
+
+    do file.wtext("C:\\fttjson\\test.json",json)
+}
