@@ -77,9 +77,14 @@ module "ftt.export"
     {
         ref l=list.create_from_fields(config)
 
+        uuid=uuid()
+        if field.exist(config,"uuid") { uuid=config.uuid }
+
+        ref initial_params=@@(config,"&parameters")
+
         new result
         {
-            @"uuid":uuid()
+            @"uuid":uuid
             @"timestamp": date_str(now(),"yyyy-MM-ddThh:mm:ss")
         }
 
@@ -87,7 +92,7 @@ module "ftt.export"
 
         for i=0;i<list.count(l)
         {
-            do list.add(transactions, dbr.ftt.export.trans(db,list.str(l,i), field.obj(config,list.str(l,i)),@null))
+            do list.add(transactions, dbr.ftt.export.trans(db,list.str(l,i), field.obj(config,list.str(l,i)),initial_params))
         }
 
         result<"transactions*">:transactions
